@@ -73,6 +73,23 @@ func TestTableBaseScalarMult(t *testing.T) {
 	}
 }
 
+func TestTableBaseScalarMult5(t *testing.T) {
+	var table edwards25519.ScalarMultTable5
+	var B, p1, p2 edwards25519.ExtendedPoint
+	B.SetBase()
+	table.Compute(&B)
+	var s [32]byte
+	for i := 0; i < 1000; i++ {
+		rnd.Read(s[:])
+		s[31] &= 31
+		table.ScalarMult(&p1, &s)
+		p2.ScalarMult(&B, &s)
+		if p1.RistrettoEqualsI(&p2) != 1 {
+			t.Fatalf("[%v]B = %v != %v", s, p2, p1)
+		}
+	}
+}
+
 func TestBaseScalarMultTable(t *testing.T) {
 	var table edwards25519.ScalarMultTable
 	var B edwards25519.ExtendedPoint

@@ -7,6 +7,12 @@ type NielsPoint struct {
 // Precomputed scalar multiplication table
 type ScalarMultTable [32][8]NielsPoint
 
+// Larger precomputed scalar multiplication table
+//
+// Compared to ScalarMultTable, this table is slower to compute and larger,
+// but if it fits (~50KB) in your L1 cache, it's faster.
+type ScalarMultTable5 [26][16]NielsPoint
+
 // Set p to zero, the neutral element.  Return p.
 func (p *NielsPoint) SetZero() *NielsPoint {
 	p.YMinusX.SetOne()
@@ -104,6 +110,34 @@ func (t *ScalarMultTable) Compute(p *ExtendedPoint) {
 	}
 }
 
+// Fill the table t with data for the point p.
+func (t *ScalarMultTable5) Compute(p *ExtendedPoint) {
+	var c, cp ExtendedPoint
+	var c_pp ProjectivePoint
+	var c_cp CompletedPoint
+	cp.Set(p)
+	for i := 0; i < 26; i++ {
+		c.SetZero()
+		for v := 0; v < 16; v++ {
+			c.Add(&c, &cp)
+			t[i][v].SetExtended(&c)
+		}
+		c_cp.DoubleExtended(&c)
+		c_pp.SetCompleted(&c_cp)
+		c_cp.DoubleProjective(&c_pp)
+		c_pp.SetCompleted(&c_cp)
+		c_cp.DoubleProjective(&c_pp)
+		c_pp.SetCompleted(&c_cp)
+		c_cp.DoubleProjective(&c_pp)
+		c_pp.SetCompleted(&c_cp)
+		c_cp.DoubleProjective(&c_pp)
+		c_pp.SetCompleted(&c_cp)
+		c_cp.DoubleProjective(&c_pp)
+		cp.SetCompleted(&c_cp)
+	}
+}
+
+
 // Compute 4-bit signed window for the scalar s
 func computeScalarWindow4(s *[32]byte, w *[64]int8) {
 	for i := 0; i < 32; i++ {
@@ -151,11 +185,57 @@ func (t *ScalarMultTable) ScalarMult(p *ExtendedPoint, s *[32]byte) {
 	}
 }
 
+// Set p to s * q, where t was computed for q using t.Compute(q).
+func (t *ScalarMultTable5) ScalarMult(p *ExtendedPoint, s *[32]byte) {
+	var w [51]int8
+	computeScalarWindow5(s, &w)
+
+	p.SetZero()
+	var np NielsPoint
+	var cp CompletedPoint
+	var pp ProjectivePoint
+
+	for i := int32(1); i < 51; i += 2 {
+		t.selectPoint(&np, i/2, int32(w[i]))
+		cp.AddExtendedNiels(p, &np)
+		p.SetCompleted(&cp)
+	}
+
+	cp.DoubleExtended(p)
+	pp.SetCompleted(&cp)
+	cp.DoubleProjective(&pp)
+	pp.SetCompleted(&cp)
+	cp.DoubleProjective(&pp)
+	pp.SetCompleted(&cp)
+	cp.DoubleProjective(&pp)
+	pp.SetCompleted(&cp)
+	cp.DoubleProjective(&pp)
+	p.SetCompleted(&cp)
+
+	for i := int32(0); i < 51; i += 2 {
+		t.selectPoint(&np, i/2, int32(w[i]))
+		cp.AddExtendedNiels(p, &np)
+		p.SetCompleted(&cp)
+	}
+}
+
 func (t *ScalarMultTable) selectPoint(p *NielsPoint, pos int32, b int32) {
 	bNegative := negative(b)
 	bAbs := b - (((-bNegative) & b) << 1)
 	p.SetZero()
 	for i := int32(0); i < 8; i++ {
+		p.ConditionalSet(&t[pos][i], equal30(bAbs, i+1))
+	}
+	var negP NielsPoint
+	negP.Neg(p)
+	p.ConditionalSet(&negP, bNegative)
+}
+
+func (t *ScalarMultTable5) selectPoint(p *NielsPoint, pos int32, b int32) {
+	bNegative := negative(b)
+	bAbs := b - (((-bNegative) & b) << 1)
+	p.SetZero()
+	for i := int32(0); i < 16; i++ {
 		p.ConditionalSet(&t[pos][i], equal30(bAbs, i+1))
 	}
 	var negP NielsPoint

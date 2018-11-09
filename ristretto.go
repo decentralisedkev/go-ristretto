@@ -42,6 +42,12 @@ type Point edwards25519.ExtendedPoint
 // A table to speed up scalar multiplication of a fixed point
 type ScalarMultTable edwards25519.ScalarMultTable
 
+// A larger table to speed up scalar multiplication of a fixed point.
+//
+// This table is larger compared to ScalarMultTable and is (unsurprisingly)
+// slower to compute.  If it fits in the L1 cache of your CPU, it's faster.
+type ScalarMultTable5 edwards25519.ScalarMultTable5
+
 // Sets p to zero (the neutral element).  Returns p.
 func (p *Point) SetZero() *Point {
 	p.e().SetZero()
@@ -112,6 +118,13 @@ func (p *Point) SetElligator(buf *[32]byte) *Point {
 // Sets p to s * q, where q is the point for which the table t was
 // computed. Returns p.
 func (p *Point) ScalarMultTable(t *ScalarMultTable, s *Scalar) *Point {
+	t.t().ScalarMult(p.e(), (*[32]uint8)(s))
+	return p
+}
+
+// Sets p to s * q, where q is the point for which the table t was
+// computed. Returns p.
+func (p *Point) ScalarMultTable5(t *ScalarMultTable5, s *Scalar) *Point {
 	t.t().ScalarMult(p.e(), (*[32]uint8)(s))
 	return p
 }
@@ -249,7 +262,16 @@ func (t *ScalarMultTable) t() *edwards25519.ScalarMultTable {
 	return (*edwards25519.ScalarMultTable)(t)
 }
 
+func (t *ScalarMultTable5) t() *edwards25519.ScalarMultTable5 {
+	return (*edwards25519.ScalarMultTable5)(t)
+}
+
 // Fills the table for point p.
 func (t *ScalarMultTable) Compute(p *Point) {
+	t.t().Compute(p.e())
+}
+
+// Fills the table for point p.
+func (t *ScalarMultTable5) Compute(p *Point) {
 	t.t().Compute(p.e())
 }
