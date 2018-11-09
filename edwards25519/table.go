@@ -137,7 +137,6 @@ func (t *ScalarMultTable5) Compute(p *ExtendedPoint) {
 	}
 }
 
-
 // Compute 4-bit signed window for the scalar s
 func computeScalarWindow4(s *[32]byte, w *[64]int8) {
 	for i := 0; i < 32; i++ {
@@ -195,8 +194,8 @@ func (t *ScalarMultTable5) ScalarMult(p *ExtendedPoint, s *[32]byte) {
 	var cp CompletedPoint
 	var pp ProjectivePoint
 
-	for i := int32(1); i < 51; i += 2 {
-		t.selectPoint(&np, i/2, int32(w[i]))
+	for i := int32(0); i < 25; i++ {
+		t.selectPoint(&np, i, int32(w[2*i+1]))
 		cp.AddExtendedNiels(p, &np)
 		p.SetCompleted(&cp)
 	}
@@ -212,8 +211,8 @@ func (t *ScalarMultTable5) ScalarMult(p *ExtendedPoint, s *[32]byte) {
 	cp.DoubleProjective(&pp)
 	p.SetCompleted(&cp)
 
-	for i := int32(0); i < 51; i += 2 {
-		t.selectPoint(&np, i/2, int32(w[i]))
+	for i := int32(0); i < 26; i++ {
+		t.selectPoint(&np, i, int32(w[2*i]))
 		cp.AddExtendedNiels(p, &np)
 		p.SetCompleted(&cp)
 	}
