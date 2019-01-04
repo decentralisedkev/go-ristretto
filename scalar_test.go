@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	ristretto "github.com/decentralisedkev/go-ristretto2"
+	ristretto "github.com/decentralisedkev/go-ristretto"
 )
 
 var biL big.Int
