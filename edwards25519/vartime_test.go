@@ -56,6 +56,34 @@ func TestVarTimeScalarMult(t *testing.T) {
 	}
 }
 
+func TestVarTimeMultiScalarMultOneScalar(t *testing.T) {
+	// Test to make sure we are consistent with case of one scalar
+	// XXX : Add case for multiple scalars
+	rnd := rand.New(rand.NewSource(37))
+	var fe FieldElement
+	var cp CompletedPoint
+	var q, p1, p2, p3 ExtendedPoint
+	var s [32]byte
+	for i := 0; i < 1000; i++ {
+		var buf [32]byte
+		rnd.Read(buf[:])
+		fe.SetBytes(&buf)
+		cp.SetRistrettoElligator2(&fe)
+		q.SetCompleted(&cp)
+		rnd.Read(s[0:32])
+		s[31] &= 31
+		p1.ScalarMult(&q, &s)
+		p2.VarTimeScalarMult(&q, &s)
+		p3.VarTimeMultiScalarMult([]*ExtendedPoint{&q}, []*[32]byte{&s})
+		if p1.RistrettoEqualsI(&p2) != 1 {
+			t.Fatalf("[%v]%v = %v != %v", s, q, p1, p2)
+		}
+		if p1.RistrettoEqualsI(&p3) != 1 {
+			t.Fatalf("[%v]%v = %v != %v", s, q, p1, p3)
+		}
+	}
+}
+
 func BenchmarkVarTimeScalarMult(b *testing.B) {
 	rnd := rand.New(rand.NewSource(37))
 	var buf, s [32]byte

@@ -115,3 +115,58 @@ func (p *ExtendedPoint) VarTimeScalarMult(q *ExtendedPoint, s *[32]byte) *Extend
 
 	return p
 }
+
+func (p *ExtendedPoint) VarTimeMultiScalarMult(points []*ExtendedPoint, scalars []*[32]byte) *ExtendedPoint {
+
+	var luts [][8]ExtendedPoint
+
+	// Precomputations for all points
+	// Bas mentioned it not being optimal, if all or some points are the same
+	var lut [8]ExtendedPoint
+	var dblP ExtendedPoint
+	for _, p := range points {
+
+		dblP.Double(p)
+		lut[0].Set(p)
+
+		for i := 1; i < 8; i++ {
+			lut[i].Add(&lut[i-1], &dblP)
+		}
+
+		luts = append(luts, lut)
+	}
+
+	// Compute non-adjacent forms of scalars
+	var nafs [][256]int8
+	var naf [256]int8
+	for _, scalar := range scalars {
+
+		computeScalar5NAF(scalar, &naf)
+
+		nafs = append(nafs, naf)
+	}
+
+	p.SetZero()
+
+	for i := 255; i >= 0; i-- {
+
+		p.Double(p)
+		// assumes that scalars and points are same length slices
+		for j := range nafs {
+
+			naf := nafs[j]
+			lut := luts[j]
+
+			if naf[i] > 0 {
+				p.Add(p, &lut[(naf[i]+1)/2-1])
+			} else if naf[i] == 0 {
+
+			} else if naf[i] < 0 {
+				p.Sub(p, &lut[(1-naf[i])/2-1])
+			}
+
+		}
+	}
+
+	return p
+}
