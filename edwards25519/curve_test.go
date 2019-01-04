@@ -5,8 +5,8 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/bwesterb/go-ristretto/cref"
-	"github.com/bwesterb/go-ristretto/edwards25519"
+	"github.com/decentralisedkev/go-ristretto/cref"
+	"github.com/decentralisedkev/go-ristretto/edwards25519"
 )
 
 func TestElligatorAndRistretto(t *testing.T) {

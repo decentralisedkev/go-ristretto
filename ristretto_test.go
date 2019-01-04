@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/bwesterb/go-ristretto"
+	"github.com/decentralisedkev/go-ristretto"
 )
 
 func TestPointDerive(t *testing.T) {

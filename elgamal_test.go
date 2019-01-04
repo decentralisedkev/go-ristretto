@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/bwesterb/go-ristretto"
+	"github.com/decentralisedkev/go-ristretto"
 )
 
 func Example() {

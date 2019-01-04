@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bwesterb/go-ristretto"
+	ristretto "github.com/decentralisedkev/go-ristretto2"
 )
 
 var biL big.Int
@@ -123,6 +123,27 @@ func TestScMulAdd(t *testing.T) {
 	}
 }
 
+func TestScMulSub(t *testing.T) {
+
+	var bi1, bi2, bi3, bi4 big.Int
+	var s1, s2, s3, s4 ristretto.Scalar
+	for i := 0; i < 10; i++ {
+		bi1.Rand(rnd, &biL)
+		bi2.Rand(rnd, &biL)
+		bi3.Rand(rnd, &biL)
+		bi4.Mul(&bi1, &bi2)
+		bi4.Sub(&bi4, &bi3)
+		bi4.Mod(&bi4, &biL)
+		s1.SetBigInt(&bi1)
+		s2.SetBigInt(&bi2)
+		s3.SetBigInt(&bi3)
+		s4.MulSub(&s1, &s2, &s3)
+		if s4.MulSub(&s1, &s2, &s3).BigInt().Cmp(&bi4) != 0 {
+			t.Fatalf("%v * %v + %v = %v != %v",
+				&bi1, &bi2, &bi3, &bi4, s4.BigInt())
+		}
+	}
+}
 func TestScInverse(t *testing.T) {
 	var bi1, bi2 big.Int
 	var s1, s2 ristretto.Scalar

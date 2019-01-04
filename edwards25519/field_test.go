@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bwesterb/go-ristretto/edwards25519"
+	"github.com/decentralisedkev/go-ristretto/edwards25519"
 )
 
 var bi25519 big.Int

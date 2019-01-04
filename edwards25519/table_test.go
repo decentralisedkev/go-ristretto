@@ -3,7 +3,7 @@ package edwards25519_test
 import (
 	"testing"
 
-	"github.com/bwesterb/go-ristretto/edwards25519"
+	"github.com/decentralisedkev/go-ristretto/edwards25519"
 )
 
 func TestAddExtendedNiels(t *testing.T) {

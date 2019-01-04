@@ -33,7 +33,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bwesterb/go-ristretto/edwards25519"
+	"github.com/decentralisedkev/go-ristretto/edwards25519"
 )
 
 // Represents an element of the Ristretto group over Edwards25519.
